@@ -128,7 +128,10 @@ class ChatService:
 
     async def set_model(self):
         self.origin_model = self.data.get("model", ModelResolver.DEFAULT_MODEL)
+        logger.info(f"Probing model: {self.origin_model}")
         self.resp_model, self.req_model = ModelResolver.resolve(self.origin_model)
+        logger.info(f"Resulting request model: {self.req_model}")
+        logger.info(f"Resulting response model: {self.resp_model}")
 
     async def get_chat_requirements(self):
         if conversation_only:
@@ -276,6 +279,7 @@ class ChatService:
         if "-gizmo" in self.origin_model:
             gizmo_id = self.origin_model.split("-gizmo-")[-1]
             conversation_mode = {"kind": "gizmo_interaction", "gizmo_id": gizmo_id}
+            logger.info(f"Using gizmo: {gizmo_id}")
         else:
             conversation_mode = {"kind": "primary_assistant"}
 
