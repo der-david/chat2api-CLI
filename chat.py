@@ -78,7 +78,8 @@ def get_data_dir():
     if getattr(sys, 'frozen', False):
         return Path(sys.executable).parent
     else:
-        return Path.cwd()
+        #return Path.cwd()
+        return Path("data")
 
 def normalize_endpoint(endpoint: str) -> str:
     """Normalize endpoint URL by removing trailing slashes"""

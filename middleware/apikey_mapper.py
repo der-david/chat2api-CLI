@@ -14,8 +14,8 @@ class APIKeyMapperMiddleware(BaseHTTPMiddleware):
     
     def __init__(self, app):
         super().__init__(app)
-        self.apikeys_file = Path("apikeys.json")
-        self.tokens_file = Path("tokens.json")
+        self.apikeys_file = Path("auth/apikeys.json")
+        self.tokens_file = Path("auth/tokens.json")
     
     def load_mappings(self):
         """Load API key and token mappings"""
