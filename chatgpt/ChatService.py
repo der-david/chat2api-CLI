@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from starlette.concurrency import run_in_threadpool
 
 from api.files import get_image_size, get_file_extension, determine_file_use_case
-from api.models import model_proxy
+from api.model_resolver import ModelResolver
 from chatgpt.authorization import get_req_token, verify_token, get_fp
 from chatgpt.chatFormat import api_messages_to_chat, stream_response, format_not_stream_response, head_process_response
 from chatgpt.chatLimit import check_is_limit, handle_request_limit
@@ -127,36 +127,8 @@ class ChatService:
         await get_dpl(self)
 
     async def set_model(self):
-        self.origin_model = self.data.get("model", "gpt-3.5-turbo-0125")
-        self.resp_model = model_proxy.get(self.origin_model, self.origin_model)
-        if "o1-preview" in self.origin_model:
-            self.req_model = "o1-preview"
-        elif "o1-mini" in self.origin_model:
-            self.req_model = "o1-mini"
-        elif "o1" in self.origin_model:
-            self.req_model = "o1"
-        elif "gpt-4.5o" in self.origin_model:
-            self.req_model = "gpt-4.5o"
-        elif "gpt-4o-canmore" in self.origin_model:
-            self.req_model = "gpt-4o-canmore"
-        elif "gpt-4o-mini" in self.origin_model:
-            self.req_model = "gpt-4o-mini"
-        elif "gpt-4o" in self.origin_model:
-            self.req_model = "gpt-4o"
-        elif "gpt-4-mobile" in self.origin_model:
-            self.req_model = "gpt-4-mobile"
-        elif "gpt-4-gizmo" in self.origin_model:
-            self.req_model = "gpt-4o"
-        elif "gpt-5" in self.origin_model:
-            self.req_model = "gpt-5"
-        elif "gpt-4" in self.origin_model:
-            self.req_model = "gpt-4"
-        elif "gpt-3.5" in self.origin_model:
-            self.req_model = "text-davinci-002-render-sha"
-        elif "auto" in self.origin_model:
-            self.req_model = "auto"
-        else:
-            self.req_model = "auto"
+        self.origin_model = self.data.get("model", ModelResolver.DEFAULT_MODEL)
+        self.resp_model, self.req_model = ModelResolver.resolve(self.origin_model)
 
     async def get_chat_requirements(self):
         if conversation_only:
@@ -301,8 +273,8 @@ class ChatService:
             self.chat_headers.pop('openai-sentinel-ark' + 'ose-token', None)
             self.chat_headers.pop('openai-sentinel-turnstile-token', None)
 
-        if "gpt-4-gizmo" in self.origin_model:
-            gizmo_id = self.origin_model.split("gpt-4-gizmo-")[-1]
+        if "-gizmo" in self.origin_model:
+            gizmo_id = self.origin_model.split("-gizmo-")[-1]
             conversation_mode = {"kind": "gizmo_interaction", "gizmo_id": gizmo_id}
         else:
             conversation_mode = {"kind": "primary_assistant"}
